@@ -30,14 +30,12 @@ e compilali
 ### 3. Avvia l'applicazione
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 9000
 ```
-
-L'app sarà disponibile su `http://localhost:8000`.
 
 ## Utilizzo
 
-Apri il browser su `http://localhost:8000` e scrivi le tue domande nella chat.
+Apri il browser su `http://localhost:9000` e scrivi le tue domande nella chat.
 
 ### Esempi di domande
 
