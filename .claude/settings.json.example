@@ -1,0 +1,14 @@
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "5000",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku",
+    "CLAUDE_CODE_BRIEF": "1",
+
+    "DB_HOST": "test-databases-portal.cluster-c6crbulbzemm.eu-central-1.rds.amazonaws.com",
+    "DB_PORT": "3306",
+    "DB_NAME": "theidfactory_ordini",
+    "DB_USERNAME": "portal",
+    "DB_PASSWORD": ""
+  }
+}
