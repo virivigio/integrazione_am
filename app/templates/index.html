@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistente Ordini</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f0f2f5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chat-container {
+    width: 100%;
+    max-width: 780px;
+    height: 92vh;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    background: #1a73e8;
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .chat-header h1 { font-size: 1.1rem; font-weight: 600; }
+  .chat-header span { font-size: 0.78rem; opacity: 0.8; }
+
+  .btn-new {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: background 0.2s;
+  }
+  .btn-new:hover { background: rgba(255,255,255,0.35); }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    max-width: 78%;
+  }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.assistant { align-self: flex-start; align-items: flex-start; }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.user .bubble {
+    background: #1a73e8;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.assistant .bubble {
+    background: #f1f3f4;
+    color: #202124;
+    border-bottom-left-radius: 4px;
+  }
+
+  .ts {
+    font-size: 0.7rem;
+    color: #9aa0a6;
+    margin-top: 3px;
+    padding: 0 4px;
+  }
+
+  .typing {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    background: #f1f3f4;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    background: #9aa0a6;
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  .input-area {
+    padding: 12px 16px;
+    border-top: 1px solid #e8eaed;
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    background: #fff;
+  }
+
+  textarea {
+    flex: 1;
+    resize: none;
+    border: 1px solid #dadce0;
+    border-radius: 24px;
+    padding: 10px 16px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    outline: none;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.4;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: #1a73e8; }
+
+  .btn-send {
+    background: #1a73e8;
+    border: none;
+    color: #fff;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .btn-send:hover { background: #1558b0; }
+  .btn-send:disabled { background: #dadce0; cursor: default; }
+  .btn-send svg { width: 18px; height: 18px; fill: #fff; }
+
+  .welcome {
+    text-align: center;
+    color: #9aa0a6;
+    font-size: 0.88rem;
+    padding: 24px;
+  }
+  .welcome strong { display: block; font-size: 1rem; color: #5f6368; margin-bottom: 8px; }
+  .examples { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .example-btn {
+    background: #f1f3f4;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #1a73e8;
+    text-align: left;
+    transition: background 0.15s;
+  }
+  .example-btn:hover { background: #e8f0fe; }
+</style>
+</head>
+<body>
+<div class="chat-container">
+  <div class="chat-header">
+    <div>
+      <h1>Assistente Ordini</h1>
+      <span>BESTE · MABI · GENTILI-MOSCONI</span>
+    </div>
+    <button class="btn-new" onclick="newChat()">Nuova chat</button>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <strong>Come posso aiutarti?</strong>
+      Puoi chiedermi informazioni sugli ordini dei brand supportati.
+      <div class="examples">
+        <button class="example-btn" onclick="sendExample(this)">Qual è lo stato dell'ordine V2400438 di GENTILI-MOSCONI?</button>
+        <button class="example-btn" onclick="sendExample(this)">Quante righe confermate ha l'ordine F2400438 di GENTILI-MOSCONI?</button>
+        <button class="example-btn" onclick="sendExample(this)">Mostrami gli ultimi ordini aperti di MABI</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <textarea id="input" placeholder="Scrivi un messaggio..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="btn-send" id="sendBtn" onclick="sendMessage()" title="Invia">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  let sessionId = localStorage.getItem('orders_session_id') || null;
+
+  function fmt(dt) {
+    return dt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function appendMsg(role, text) {
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.remove();
+
+    const container = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `<div class="bubble">${escHtml(text)}</div><span class="ts">${fmt(new Date())}</span>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function showTyping() {
+    const container = document.getElementById('messages');
+    const el = document.createElement('div');
+    el.id = 'typing';
+    el.className = 'typing';
+    el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    container.appendChild(el);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  async function sendMessage(text) {
+    const input = document.getElementById('input');
+    const message = text || input.value.trim();
+    if (!message) return;
+
+    input.value = '';
+    input.style.height = '';
+    document.getElementById('sendBtn').disabled = true;
+
+    appendMsg('user', message);
+    showTyping();
+
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, message }),
+      });
+
+      const data = await res.json();
+      hideTyping();
+
+      if (!res.ok) {
+        appendMsg('assistant', 'Errore: ' + (data.detail || 'risposta non valida'));
+        return;
+      }
+
+      sessionId = data.session_id;
+      localStorage.setItem('orders_session_id', sessionId);
+      appendMsg('assistant', data.response);
+    } catch (e) {
+      hideTyping();
+      appendMsg('assistant', 'Errore di connessione. Riprova.');
+    } finally {
+      document.getElementById('sendBtn').disabled = false;
+      input.focus();
+    }
+  }
+
+  function sendExample(btn) {
+    sendMessage(btn.textContent.trim());
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = '';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function newChat() {
+    sessionId = null;
+    localStorage.removeItem('orders_session_id');
+    const container = document.getElementById('messages');
+    container.innerHTML = `
+      <div class="welcome" id="welcome">
+        <strong>Come posso aiutarti?</strong>
+        Puoi chiedermi informazioni sugli ordini dei brand supportati.
+        <div class="examples">
+          <button class="example-btn" onclick="sendExample(this)">Qual è lo stato dell'ordine V2400438 di GENTILI-MOSCONI?</button>
+          <button class="example-btn" onclick="sendExample(this)">Quante righe confermate ha l'ordine F2400438 di GENTILI-MOSCONI?</button>
+          <button class="example-btn" onclick="sendExample(this)">Mostrami gli ultimi ordini aperti di MABI</button>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('input').focus();
+</script>
+</body>
+</html>
