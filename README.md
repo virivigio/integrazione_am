@@ -25,8 +25,6 @@ cp .env.example .env
 cp .claude/settings.json.example .claude/settings.json
 ```
 
-e compilali
-
 ### 3. Avvia l'applicazione
 
 ```bash
