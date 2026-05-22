@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",                                                                                                       
+    "configurations": [                                     
+      {                                                                                                                       
+        "name": "Uvicorn (debug)",                                                                                            
+        "type": "debugpy",                                                                                                    
+        "request": "launch",                                                                                                  
+        "module": "uvicorn",                                                                                                  
+        "args": ["app.main:app", "--port", "9000"],                                                                           
+        "jinja": true,                                                                                                        
+        "justMyCode": true                                                                                                    
+      }                                                                                                                       
+    ]                                                                                                                         
+  }         

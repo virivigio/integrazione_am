@@ -11,6 +11,16 @@ from app.tools.database_tools import execute_tool
 DEBUG = True
 
 logger = logging.getLogger(__name__)
+if DEBUG:
+    # Uvicorn gira di default a livello INFO: senza questa riga i messaggi
+    # DEBUG vengono filtrati. Impostiamo il livello solo su questo logger
+    # per non inondare il terminale con i debug di tutti gli altri moduli.
+    logger.setLevel(logging.DEBUG)
+    if not logger.handlers:
+        _handler = logging.StreamHandler()
+        _handler.setFormatter(logging.Formatter("%(levelname)-8s %(name)s: %(message)s"))
+        logger.addHandler(_handler)
+        logger.propagate = False
 
 _KB = Path(__file__).parent.parent / "knowledge_base.md"
 
