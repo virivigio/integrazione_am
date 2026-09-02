@@ -7,7 +7,7 @@ Agente AI conversazionale per interrogare gli ordini dei brand BESTE, MABI e GEN
 ## Prerequisiti
 
 - Python 3.11+
-- Accesso al database MySQL (credenziali già configurate in `.claude/settings.json`)
+- Accesso al database MySQL (credenziali da inserire in `.env`/`.env.test`/`.env.stage`, vedi sotto)
 - API key OpenAI
 
 ## Setup
