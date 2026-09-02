@@ -19,5 +19,6 @@ Obiettivo esplicito di Virgilio per questo repo: deve restare pronto a ricevere 
 
 - **Ogni query di esempio in `knowledge_base.md` deve selezionare tutti i campi rilevanti della tabella**, anche quelli usati solo come filtro nella WHERE — deve restituire un risultato completo senza dover tornare a modificare il SELECT.
 - **Quando cambia lo schema documentato in `knowledge_base.md`, aggiornare subito anche i SELECT in `app/tools/database_tools.py`** (e viceversa) — non lasciare i due disallineati in attesa che qualcuno se ne accorga.
+- **Nuove incoerenze in `knowledge_base.md` vanno verificate contro idf-hop (e/o il DB reale via MCP) prima di correggerle** — non fidarsi di conoscenza dedotta a memoria. Il file è stato riletto e verificato per intero il 2026-09-02 (schema, tipi colonna, mapping brand, ciclo di vita ordine): eventuali nuovi dubbi vanno controllati con lo stesso rigore, non assunti.
 - Non usare la memoria locale di Claude per contenuti su questo progetto: quello che deve sopravvivere tra sessioni va in questo file, in [CLAUDE-SPEC.md](CLAUDE-SPEC.md) o in [CLAUDE-PUNTIAPERTI.md](CLAUDE-PUNTIAPERTI.md), così è visibile anche a chi altro lavora sul repo.
 - I file `CLAUDE*.md` di questo repo sono file locali (non symlink) in un repo git privato — a differenza di idf-hop, dove sono symlink a Google Drive condiviso.
