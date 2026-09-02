@@ -24,7 +24,12 @@ if DEBUG:
 
 _KB = Path(__file__).parent.parent / "knowledge_base.md"
 
-SYSTEM_PROMPT = f"""Sei un assistente AI specializzato nella gestione degli ordini.
+
+def _build_system_prompt() -> str:
+    # Rilegge knowledge_base.md a ogni turno (invece che una volta sola
+    # all'import del modulo) così le modifiche al file sono effettive subito,
+    # senza dover riavviare uvicorn.
+    return f"""Sei un assistente AI specializzato nella gestione degli ordini.
 Hai accesso a un database MySQL. Rispondi sempre in italiano in modo chiaro e conciso.
 
 {_KB.read_text()}
@@ -55,7 +60,7 @@ def run_agent(history: list, user_message: str) -> str:
     # seguito dalla cronologia (domande e risposte precedenti + quella attuale).
     # Nota: `messages` è una copia locale usata solo per questa chiamata;
     # la cronologia persistente è `history`.
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history
+    messages = [{"role": "system", "content": _build_system_prompt()}] + history
 
     # Loop di "function calling": OpenAI può rispondere con una richiesta
     # di eseguire uno o più tool (es. find_order), oppure con il testo finale.

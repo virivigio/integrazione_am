@@ -36,7 +36,16 @@ Se in futuro servirà un agente più esplorativo di questo, l'approccio previsto
 - **Modello**: `gpt-5-nano` con `reasoning_effort="minimal"` (impostato solo per modelli `gpt-5*`, vedi `agent.py`). **Verificato empiricamente (2026-09-02)**, non dedotto dal solo prezzo a listino: senza `reasoning_effort` esplicito, `gpt-5-nano` fa reasoning implicito che genera token di output nascosti e fatturati — su una singola tool call banale, 229 token di completion di cui 192 di solo reasoning, contro i 28 totali di `gpt-4o-mini` per lo stesso prompt (quindi *più caro*, non più economico, nonostante il prezzo per token più basso). Con `reasoning_effort="minimal"` il reasoning nascosto sparisce (37 token totali) e il costo reale scende sotto quello di `gpt-4o-mini` (~24% in meno sullo stesso test) — tool calling verificato corretto in entrambi i casi. **Se si cambia modello, non fidarsi del prezzo a listino da solo**: va sempre verificato il comportamento reale con tool calling.
 - **`gpt-5.6-luna` valutato e scartato (2026-09-02)**: prezzo per token 3-4 volte più alto di `gpt-5-nano`, e soprattutto **non supporta tool calling insieme a `reasoning_effort` diverso da `"none"`/`"minimal"` su `/v1/chat/completions`** (l'API rifiuta la richiesta — serve la nuova API `/v1/responses`, non solo un cambio di config). Non riconsiderarlo senza prima valutare la migrazione a `/v1/responses`.
 - Tono: risponde sempre in italiano, in modo chiaro e conciso — oggi è l'unica istruzione di tono presente in `SYSTEM_PROMPT`, non ancora raffinata oltre questo.
-- Paginazione: i tool troncano oggi silenziosamente con `LIMIT 10` (`find_order`) e `LIMIT 200` (`get_order_lines`), senza segnalare all'utente se esistono altri risultati oltre il limite — punto da rivedere, vedi [CLAUDE-PUNTIAPERTI.md](CLAUDE-PUNTIAPERTI.md).
+- **`knowledge_base.md` viene riletto a ogni turno** (`_build_system_prompt()` in `agent.py`, non più una costante calcolata all'import): una modifica al file è effettiva alla richiesta successiva, senza riavviare uvicorn.
+- **Nessuna paginazione, deliberatamente** (deciso con Virgilio, 2026-09-02): `find_order` e `get_order_lines` non hanno più `LIMIT` — restituiscono tutte le righe trovate e la chat le mostra come tabella lunga, invece di troncare in silenzio o gestire pagine.
+
+## Decisioni di scope per questa fase demo (non riproporre)
+
+**Deciso con Virgilio (2026-09-02)**: finché il progetto resta una demo (non ancora consegnato a un cliente reale), restano deliberatamente fuori scope:
+- Autenticazione/rate limit su `/api/ask` e verifica proprietà sessione su `GET`/`DELETE /api/session/{id}` (CORS aperto a `*`).
+- Persistenza delle sessioni oltre l'in-memory a singolo processo (TTL 24h, perse al riavvio, non scalano a più worker).
+
+Da riconsiderare solo quando si passa a una consegna cliente reale — non sono più punti aperti da segnalare nel frattempo.
 
 ## Mapping brand
 

@@ -21,7 +21,6 @@ def find_order(brand: str, po_number: str) -> str:
         WHERE RolIdBrand = %s
           AND RolRivoor = %s
           AND RolRiferimento = '0'
-        LIMIT 10
         """,
         (brand_id, po_number),
     )
@@ -44,7 +43,6 @@ def get_order_lines(rol_cod_est: str) -> str:
         FROM riorcl_open
         WHERE RoaCodEst = %s
         ORDER BY RoaNumrig
-        LIMIT 200
         """,
         (rol_cod_est,),
     )
