@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 
@@ -10,11 +11,13 @@ class Settings(BaseSettings):
     DB_PASSWORD: str
 
     OPENAI_API_KEY: str
-    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_MODEL: str = "gpt-5-nano"
 
     SESSION_TTL_HOURS: int = 24
 
-    model_config = {"env_file": ".env", "case_sensitive": True}
+    # ENV_FILE permette di scegliere il file di ambiente senza toccare .env,
+    # es. `ENV_FILE=.env.stage uvicorn app.main:app --reload` (vedi README).
+    model_config = {"env_file": os.getenv("ENV_FILE", ".env"), "case_sensitive": True}
 
 
 @lru_cache()

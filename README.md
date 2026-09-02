@@ -2,6 +2,8 @@
 
 Agente AI conversazionale per interrogare gli ordini dei brand BESTE, MABI e GENTILI-MOSCONI su database MySQL.
 
+> Per contribuire al codice, leggere anche [CLAUDE.md](CLAUDE.md) (modello di collaborazione e dove vive la conoscenza di dominio) e [CLAUDE-SPEC.md](CLAUDE-SPEC.md) (architettura e convenzioni tecniche di questo repo).
+
 ## Prerequisiti
 
 - Python 3.11+
@@ -30,6 +32,24 @@ cp .claude/settings.json.example .claude/settings.json
 ```bash
 uvicorn app.main:app --reload --port 9000
 ```
+
+## Ambienti disponibili e come cambiarli
+
+L'app si collega sempre a **un solo database MySQL per volta**, quello indicato da `DB_HOST`/`DB_USERNAME`/`DB_PASSWORD` nel file d'ambiente caricato. Oggi sono pronti due ambienti, entrambi in `theidfactory_ordini`:
+
+| Ambiente | File | Uso |
+|---|---|---|
+| **stage** | `.env.stage` | dati più recenti/vicini a produzione |
+| **test** | `.env.test` | dati di test |
+
+Il modo più comodo per scegliere è impostare `ENV_FILE` all'avvio, senza toccare `.env`:
+
+```bash
+ENV_FILE=.env.stage uvicorn app.main:app --reload --port 9000
+ENV_FILE=.env.test uvicorn app.main:app --reload --port 9000
+```
+
+Senza `ENV_FILE`, l'app usa `.env` (di default allineato a stage). Questi file (`.env`, `.env.stage`, `.env.test`) non sono su git: crearli a mano copiando `.env.example` e compilando le credenziali per l'ambiente voluto.
 
 ## Utilizzo
 
@@ -72,25 +92,6 @@ Restituisce la cronologia della conversazione.
 ### `DELETE /api/session/{session_id}`
 
 Azzera la sessione (equivale a "Nuova chat").
-
-## Struttura del progetto
-
-```
-app/
-├── main.py                # Entry point FastAPI
-├── config.py              # Configurazione da variabili d'ambiente
-├── database.py            # Connection pool MySQL (read-only)
-├── agent.py               # Loop OpenAI function calling
-├── session_manager.py     # Gestione sessioni in-memory (TTL 24h)
-├── tools/
-│   ├── tool_registry.py   # Definizioni tools JSON per OpenAI
-│   └── database_tools.py  # Implementazione query SQL
-├── routers/
-│   ├── api.py             # Endpoint /api/*
-│   └── web.py             # Endpoint / (chat UI)
-└── templates/
-    └── index.html         # Interfaccia chat HTML
-```
 
 ## Note tecniche
 

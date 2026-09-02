@@ -72,25 +72,26 @@ Quando un ordine entra nel sistema viene creata una testata con `RolRiferimento 
 L'approvazione avviene **per righe, anche parzialmente**, e può avvenire in più tornate:
 
 1. Vengono selezionate alcune righe da approvare.
-2. Viene creata una **nuova testata** con un nuovo `RolCodEst` (es. `RolCodEstNEW`) e `RolRiferimento = RolCodEst originale`.
-3. Le righe approvate vengono **clonate** nella nuova testata con nuovi `RoaNumrig`.
-4. Le righe originali appena approvate ricevono:
-   - `RolDelete = 'S'`, `RolChiuso = 'S'`
-   - `confirmed_id_rif = RolCodEstNEW`
-   - `confirmed_row_rif = RoaNumrig` della riga clonata
-5. Le righe non ancora approvate rimangono sulla testata originale con flag a `'N'` e `confirmed_id_rif = NULL`.
+2. Viene creata una **nuova testata clone** con un nuovo `RolCodEst` (es. `RolCodEstNEW`) e `RolRiferimento = RolCodEst originale`. La testata clone riceve `RolChiuso = 'S'`, `RolDelete = 'N'`.
+3. Le righe approvate vengono **clonate** nella testata clone con nuovi `RoaNumrig`. Le righe clonate ricevono `RoaChiuso = 'S'`, `RoaDelete = 'N'`.
+4. Le righe originali appena approvate ricevono `RoaChiuso = 'S'` (**restano `RoaDelete = 'N'`**: a livello di riga la cancellazione non è mai un effetto dell'approvazione, solo `RoaChiuso` cambia), più:
+   - `confirmed_id_rif = RolCodEstNEW` (il `RolCodEst` della testata clone)
+   - `confirmed_row_rif = RoaNumrig` della riga clonata corrispondente
+5. Le righe non ancora approvate rimangono sulla testata originale con `RoaChiuso = 'N'`, `RoaDelete = 'N'` e `confirmed_id_rif = NULL`.
+6. La **testata originale** riceve `RolChiuso = 'S'`, `RolDelete = 'S'` a ogni evento di approvazione (anche parziale) — osservato sia su ordini approvati in un solo evento sia su ordini con più tornate parziali.
 
-Ogni tornata di approvazione (anche parziale) genera una nuova testata distinta. Al termine, l'ordine originale (`RolRiferimento = '0'`) può avere righe ancora aperte (non approvate) o essere completamente svuotato.
+Ogni tornata di approvazione (anche parziale) genera una nuova testata clone distinta, con un proprio `RolCodEst` che le righe via via approvate in quell'evento referenziano tramite `confirmed_id_rif`. Al termine, l'ordine originale (`RolRiferimento = '0'`) può avere ancora righe aperte (non approvate) insieme a quelle già approvate.
 
 **Riepilogo rapido:**
 
-| Stato | `RolRiferimento` | `RoaDelete` / `RoaChiuso` | `confirmed_id_rif` | `confirmed_row_rif` |
-|-------|-----------------|--------------------------|-------------------|---------------------|
-| Testata aperta (bozza) | `'0'` | — | — | — |
-| Testata approvata | `RolCodEst` originale | — | — | — |
-| Riga ancora aperta | — | `'N'` / `'N'` | `NULL` | `NULL` |
-| Riga approvata (originale) | — | `'S'` / `'S'` | `RolCodEst` nuova testata | `RoaNumrig` della riga clonata |
-| Riga approvata (clone) | — | `'N'` / `'N'` | `NULL` |
+| Livello | Stato | `RolChiuso` / `RoaChiuso` | `RolDelete` / `RoaDelete` | `confirmed_id_rif` | `confirmed_row_rif` |
+|---|---|---|---|---|---|
+| Testata | Aperta (bozza), `RolRiferimento = '0'` | `'N'` | `'N'` | — | — |
+| Testata | Originale, dopo almeno un'approvazione | `'S'` | `'S'` | — | — |
+| Testata | Clone (una per evento di approvazione) | `'S'` | `'N'` | — | — |
+| Riga | Ancora aperta | `'N'` | `'N'` | `NULL` | `NULL` |
+| Riga | Originale, approvata | `'S'` | `'N'` | `RolCodEst` della testata clone | `RoaNumrig` della riga clonata |
+| Riga | Clone (nella testata clone) | `'S'` | `'N'` | `NULL` | `NULL` |
 
 ### Come cercare un ordine
 ```sql

@@ -1,4 +1,6 @@
 .env
+.env.*
+!.env.example
 .claude/settings.json
 __pycache__/
 *.pyc

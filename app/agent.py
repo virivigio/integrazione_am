@@ -61,11 +61,23 @@ def run_agent(history: list, user_message: str) -> str:
     # di eseguire uno o più tool (es. find_order), oppure con il testo finale.
     # Il loop continua finché l'assistente non dà una risposta testuale.
     while True:
+        extra_args = {}
+        if settings.OPENAI_MODEL.startswith("gpt-5"):
+            # I modelli gpt-5 fanno reasoning implicito che genera token nascosti
+            # fatturati come output: senza "minimal" il costo reale per una
+            # richiesta anche semplice come una tool call supera quello di
+            # gpt-4o-mini nonostante il prezzo per token sia più basso
+            # (verificato empiricamente: senza reasoning_effort 229 completion
+            # token di cui 192 di reasoning per una singola tool call banale,
+            # contro i 37 totali con reasoning_effort="minimal").
+            extra_args["reasoning_effort"] = "minimal"
+
         response = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=messages,
             tools=TOOLS,           # lista dei tool disponibili (tool_registry.py)
             tool_choice="auto",    # OpenAI decide da solo se usare un tool o rispondere direttamente
+            **extra_args,
         )
 
         # OpenAI restituisce sempre almeno una "scelta"; prendiamo la prima
