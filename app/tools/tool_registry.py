@@ -34,7 +34,9 @@ TOOLS = [
                 "Recupera tutte le righe di un ordine dato il suo ID interno (RolCodEst). "
                 "Ogni riga include: numero riga, quantità, prezzo, unità di misura, "
                 "flag chiusura/cancellazione, riferimento all'eventuale approvazione "
-                "(confirmed_id_rif / confirmed_row_rif), articolo e colore fornitore."
+                "(confirmed_id_rif / confirmed_row_rif), articolo e colore fornitore, "
+                "e RoaStarig (flag 'balance': 1 = riga confermata completamente spedita, "
+                "null se la riga non è ancora stata confermata/approvata)."
             ),
             "parameters": {
                 "type": "object",

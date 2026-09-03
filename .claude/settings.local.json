@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(git:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "mcp__1284d452-1e53-443f-8366-a2f175e8f211__list_labels",
+      "mcp__1284d452-1e53-443f-8366-a2f175e8f211__search_threads"
     ]
   }
 }

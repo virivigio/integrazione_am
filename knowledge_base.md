@@ -53,6 +53,16 @@ del sistema ordini, usate dall'agente AI come contesto per rispondere correttame
 | `supplier_color` | varchar(255) | Colore fornitore |
 | `updated_at` | datetime | Data aggiornamento |
 
+### Tabella `c_riorcl` — Righe ordine CONFERMATO (vero, non il mirror `riorcl_open`)
+
+`riorcl_open`/`ordcli_open` sono il mirror usato per il ciclo aperto→approvato; `c_riorcl`/`c_ordcli` sono le tabelle ERP reali dell'ordine confermato. La riga "clone" approvata (vedi ciclo di vita sopra) ha la **stessa identica chiave fisica** (`RoaCodEst`+`RoaNumrig`) sia nel clone dentro `riorcl_open` sia in `c_riorcl` — non è un ID diverso collegato da FK. `c_riorcl` ha molte altre colonne (è la tabella ERP reale): qui documentiamo solo quella oggi letta dall'agente.
+
+| Colonna | Tipo | Significato |
+|---------|------|-------------|
+| `RoaCodEst` | varchar(25) PK | Stessa chiave del clone approvato in `riorcl_open` — corrisponde a `confirmed_id_rif` sulla riga originale |
+| `RoaNumrig` | int PK | Stessa chiave del clone approvato — corrisponde a `confirmed_row_rif` sulla riga originale |
+| `RoaStarig` | tinyint | Flag "balance": `1` = riga confermata completamente spedita (tutte le spedizioni ricevute), `NULL`/`0` = non ancora completata. **Esiste solo qui**, non è una colonna di `riorcl_open`. |
+
 ---
 
 ## Regole di business
@@ -113,6 +123,21 @@ WHERE RoaCodEst = '<rol_cod_est>'
   AND RoaDelete = 'N'
   AND RoaChiuso = 'N'
 ORDER BY RoaNumrig
+```
+
+### Tutte le righe di un ordine, incluso lo stato di conferma/balance (usata da `get_order_lines`)
+Nessun filtro su chiuso/cancellato: restituisce sia le righe ancora aperte sia quelle già approvate sulla stessa testata. `RoaStarig` arriva da `c_riorcl` (tabella confermata vera, vedi sopra) tramite `confirmed_id_rif`/`confirmed_row_rif`: è `NULL` per le righe non ancora approvate.
+```sql
+SELECT r.RoaCodEst, r.RoaNumrig, r.RolIdBrand, r.RoaQuanti, r.RoaPrezzo, r.RoaUnimis,
+       r.RoaChiuso, r.RoaDelete, r.confirmed_id_rif, r.confirmed_row_rif,
+       r.supplier_article, r.supplier_color, r.updated_at,
+       c.RoaStarig
+FROM riorcl_open r
+LEFT JOIN c_riorcl c
+  ON c.RoaCodEst = r.confirmed_id_rif
+ AND c.RoaNumrig = r.confirmed_row_rif
+WHERE r.RoaCodEst = '<rol_cod_est>'
+ORDER BY r.RoaNumrig
 ```
 
 ### Righe approvate di un ordine (clone nelle testate derivate)

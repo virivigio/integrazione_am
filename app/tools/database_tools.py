@@ -59,12 +59,16 @@ def find_order(brand: str, po_number: str) -> str:
 def get_order_lines(rol_cod_est: str) -> str:
     rows = execute_query(
         """
-        SELECT RoaCodEst, RoaNumrig, RolIdBrand, RoaQuanti, RoaPrezzo, RoaUnimis,
-               RoaChiuso, RoaDelete, confirmed_id_rif, confirmed_row_rif,
-               supplier_article, supplier_color, updated_at
-        FROM riorcl_open
-        WHERE RoaCodEst = %s
-        ORDER BY RoaNumrig
+        SELECT r.RoaCodEst, r.RoaNumrig, r.RolIdBrand, r.RoaQuanti, r.RoaPrezzo, r.RoaUnimis,
+               r.RoaChiuso, r.RoaDelete, r.confirmed_id_rif, r.confirmed_row_rif,
+               r.supplier_article, r.supplier_color, r.updated_at,
+               c.RoaStarig
+        FROM riorcl_open r
+        LEFT JOIN c_riorcl c
+          ON c.RoaCodEst = r.confirmed_id_rif
+         AND c.RoaNumrig = r.confirmed_row_rif
+        WHERE r.RoaCodEst = %s
+        ORDER BY r.RoaNumrig
         LIMIT %s
         """,
         (rol_cod_est, _FETCH_LIMIT),
