@@ -7,6 +7,22 @@ BRAND_IDS = {
     "GENTILI-MOSCONI": 60,
 }
 
+# Non paginiamo: prendiamo un risultato in più del massimo mostrato per capire
+# se ce ne sono altri oltre quelli restituiti, senza dover fare COUNT(*) a parte.
+MAX_RESULTS = 20
+_FETCH_LIMIT = MAX_RESULTS + 1
+
+TRUNCATED_MESSAGE = (
+    f"Ci sono altri risultati oltre ai {MAX_RESULTS} mostrati: il sistema è "
+    "limitato a un massimo di 20 righe per richiesta. Prova a fare una domanda "
+    "più selettiva."
+)
+
+
+def _limit_results(rows: list) -> tuple[list, bool]:
+    truncated = len(rows) > MAX_RESULTS
+    return rows[:MAX_RESULTS], truncated
+
 
 def find_order(brand: str, po_number: str) -> str:
     brand_id = BRAND_IDS.get(brand.upper())
@@ -21,8 +37,9 @@ def find_order(brand: str, po_number: str) -> str:
         WHERE RolIdBrand = %s
           AND RolRivoor = %s
           AND RolRiferimento = '0'
+        LIMIT %s
         """,
-        (brand_id, po_number),
+        (brand_id, po_number, _FETCH_LIMIT),
     )
 
     if not rows:
@@ -31,7 +48,12 @@ def find_order(brand: str, po_number: str) -> str:
             "message": f"Nessun ordine trovato per brand={brand}, PO={po_number}",
         })
 
-    return json.dumps({"found": True, "count": len(rows), "orders": rows})
+    rows, truncated = _limit_results(rows)
+    result = {"found": True, "count": len(rows), "orders": rows}
+    if truncated:
+        result["truncated"] = True
+        result["truncated_message"] = TRUNCATED_MESSAGE
+    return json.dumps(result)
 
 
 def get_order_lines(rol_cod_est: str) -> str:
@@ -43,8 +65,9 @@ def get_order_lines(rol_cod_est: str) -> str:
         FROM riorcl_open
         WHERE RoaCodEst = %s
         ORDER BY RoaNumrig
+        LIMIT %s
         """,
-        (rol_cod_est,),
+        (rol_cod_est, _FETCH_LIMIT),
     )
 
     if not rows:
@@ -53,11 +76,16 @@ def get_order_lines(rol_cod_est: str) -> str:
             "message": f"Nessuna riga trovata per ordine {rol_cod_est}",
         })
 
-    return json.dumps({
+    rows, truncated = _limit_results(rows)
+    result = {
         "rol_cod_est": rol_cod_est,
         "total_lines": len(rows),
         "lines": rows,
-    })
+    }
+    if truncated:
+        result["truncated"] = True
+        result["truncated_message"] = TRUNCATED_MESSAGE
+    return json.dumps(result)
 
 
 TOOL_FUNCTIONS = {
