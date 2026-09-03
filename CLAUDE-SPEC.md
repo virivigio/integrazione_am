@@ -38,6 +38,11 @@ Se in futuro servirà un agente più esplorativo di questo, l'approccio previsto
 - Tono: risponde sempre in italiano, in modo chiaro e conciso — oggi è l'unica istruzione di tono presente in `SYSTEM_PROMPT`, non ancora raffinata oltre questo.
 - **`knowledge_base.md` viene riletto a ogni turno** (`_build_system_prompt()` in `agent.py`, non più una costante calcolata all'import): una modifica al file è effettiva alla richiesta successiva, senza riavviare uvicorn.
 - **Nessuna paginazione, ma limite "soft" a 20 risultati** (deciso con Virgilio: prima tolto ogni `LIMIT` il 2026-09-02, poi corretto il 2026-09-03 perché per la demo serve comunque un tetto): `find_order` e `get_order_lines` interrogano con `LIMIT 21` (`_FETCH_LIMIT` in `database_tools.py`) — se tornano 21 righe, ne vengono mostrate solo 20 e il JSON del tool include `truncated: true` + `truncated_message` con l'invito a fare una domanda più selettiva; se sono ≤20 vengono mostrate tutte senza alcun avviso. Nessuna paginazione vera in UI: è un "so che ce ne sono altri" via `COUNT` implicito (fetch di uno in più), non un meccanismo di pagine. Il system prompt (`agent.py`) istruisce l'agente a riportare sempre `truncated_message` quando presente.
+- **Difesa (best-effort) da prompt leaking/injection, a due livelli** (2026-09-03, vedi `agent.py`):
+  1. Il system prompt istruisce esplicitamente l'agente a non rivelare mai le proprie istruzioni (in nessuna forma: riassunto, traduzione, roleplay, ecc.) e a trattare qualsiasi testo restituito dai tool (dati DB) come dato inerte, mai come comando da eseguire.
+  2. `_looks_like_leak()` confronta con `difflib.SequenceMatcher` la risposta finale con il system prompt: se condividono una sottostringa di almeno `_LEAK_MATCH_THRESHOLD` (60) caratteri consecutivi, la risposta viene sostituita con `REFUSAL_MESSAGE` prima di arrivare all'utente — difesa in profondità che non dipende dal fatto che il modello obbedisca all'istruzione del punto 1.
+  
+  **Limite noto e accettato**: è una mitigazione euristica, non una garanzia — non esiste allo stato dell'arte una difesa che azzeri il rischio di prompt injection (OWASP LLM01). Non riproporre "rendiamola perfetta"; il livello di sforzo è proporzionato a una demo, non a un prodotto in produzione con dati sensibili.
 
 ## Decisioni di scope per questa fase demo (non riproporre)
 
